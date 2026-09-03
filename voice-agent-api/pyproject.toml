@@ -1,0 +1,17 @@
+[project]
+name = "pharmacy-voice-agent"
+version = "0.1.0"
+description = "Pharmacy voice agent demo on the Deepgram Voice Agent API. Twilio phone + browser client."
+requires-python = ">=3.11"
+dependencies = [
+    "fastapi>=0.115",
+    "uvicorn[standard]>=0.30",
+    "websockets>=13,<14",
+    "twilio>=9.0",
+    "python-dotenv>=1.0",
+    "loguru>=0.7",
+    "python-multipart>=0.0.9",
+]
+
+[tool.setuptools]
+packages = ["server"]

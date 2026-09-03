@@ -1,0 +1,113 @@
+{
+  "_comment": "The demo caller's account, read by the get_account_info tool. Kept deliberately thin on identity -- no name, no date of birth, no street address -- because the demo verifies on the calling number plus a code and never asks for anything else. All dates are RELATIVE offsets in days, rendered at call time, so the demo never goes stale sitting in a repo. Order 'in_flight' mirrors the open Aspirin order the system prompt references.",
+  "schema_version": 1,
+  "profile": {
+    "verified_by": "mobile number on file",
+    "member_since_years": 3,
+    "prime_member": true,
+    "rxpass": false,
+    "pillpack": false,
+    "insurance_plan": "Blue Cross Blue Shield PPO",
+    "insurance_status": "active",
+    "payment_method": "Visa ending in four four one two",
+    "delivery_city": "Seattle, Washington",
+    "same_day_eligible": true,
+    "allergies_on_file": [
+      "penicillin"
+    ],
+    "pharmacist_available": "twenty four hours a day, seven days a week"
+  },
+  "prescriptions": [
+    {
+      "medication": "Aspirin",
+      "strength": "81 mg",
+      "day_supply": 30,
+      "refills_remaining": 3,
+      "next_refill_in_days": 12,
+      "auto_refill": true,
+      "prescriber": "your primary care provider",
+      "status": "active"
+    },
+    {
+      "medication": "Atorvastatin",
+      "strength": "20 mg",
+      "day_supply": 84,
+      "refills_remaining": 1,
+      "next_refill_in_days": 34,
+      "auto_refill": true,
+      "prescriber": "your primary care provider",
+      "status": "active"
+    },
+    {
+      "medication": "Lisinopril",
+      "strength": "10 mg",
+      "day_supply": 84,
+      "refills_remaining": 0,
+      "next_refill_in_days": 6,
+      "auto_refill": true,
+      "prescriber": "your primary care provider",
+      "status": "awaiting prescriber",
+      "note": "out of refills; we have already requested a new prescription"
+    },
+    {
+      "medication": "Levothyroxine",
+      "strength": "100 mcg",
+      "day_supply": 30,
+      "refills_remaining": 5,
+      "next_refill_in_days": 21,
+      "auto_refill": false,
+      "prescriber": "your endocrinologist",
+      "status": "active"
+    },
+    {
+      "medication": "Zepbound",
+      "strength": "12.5 mg",
+      "day_supply": 30,
+      "refills_remaining": 2,
+      "next_refill_in_days": 0,
+      "auto_refill": false,
+      "prescriber": "your endocrinologist",
+      "status": "ready to fill",
+      "note": "new prescription, arrived from your prescriber two days ago and not filled yet"
+    }
+  ],
+  "orders": [
+    {
+      "id": "in_flight",
+      "status": "shipped",
+      "placed_days_ago": 1,
+      "arrives_in_days": 1,
+      "tracking": "on its way, tracking link sent by text and email",
+      "delivery_speed": "two day",
+      "total": 4.99,
+      "items": [
+        "Aspirin 81 milligrams, 30 day supply"
+      ]
+    },
+    {
+      "id": "processing",
+      "status": "waiting on your prescriber",
+      "placed_days_ago": 2,
+      "arrives_in_days": null,
+      "tracking": null,
+      "delivery_speed": null,
+      "total": 5.0,
+      "items": [
+        "Lisinopril 10 milligrams, 84 day supply"
+      ],
+      "note": "the prescription ran out of refills, so we requested a new one; most prescribers reply within two business days"
+    },
+    {
+      "id": "recent_delivered",
+      "status": "delivered",
+      "placed_days_ago": 26,
+      "arrives_in_days": -24,
+      "tracking": null,
+      "delivery_speed": "same day",
+      "total": 9.0,
+      "items": [
+        "Atorvastatin 20 milligrams, 84 day supply"
+      ]
+    }
+  ]
+}

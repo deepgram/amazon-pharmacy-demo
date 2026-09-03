@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Operator Console — Pharmacy Voice Agent</title>
+<link rel="icon" type="image/png" sizes="32x32" href="/static/favicon.png">
+<link rel="apple-touch-icon" href="/static/apple-touch-icon.png">
+<link rel="stylesheet" href="/static/app.css">
+</head>
+<body>
+
+<header>
+  <span class="wordmark">Deepgram</span>
+  <span class="rule"></span>
+  <span class="title">Operator Console</span>
+  <a class="call-pill" data-phone-link href="#" hidden>
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.9.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+    Call <span data-phone-text></span>
+    <span class="arrow">&rarr;</span>
+  </a>
+  <span class="spacer"></span>
+  <div class="segmented">
+    <button onclick="location.href='/'">&#8592; Transcript</button>
+    <button aria-selected="true">Console</button>
+    <button onclick="location.href='/data'">Data</button>
+  </div>
+</header>
+
+<div class="shell">
+
+  <aside class="sidebar">
+    <div class="status-pill">
+      <span class="dot" id="pollDot"></span>
+      <span id="pollStatus">Connecting&hellip;</span>
+    </div>
+
+    <div class="callin" data-phone-block hidden>
+      <span class="label">Call in</span>
+      <a class="number" data-phone-link href="#" hidden><span data-phone-text></span></a>
+      <div class="hint">The same agent, over the phone</div>
+    </div>
+
+    <details class="sect" open>
+      <summary>
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        How to run the demo
+        <svg class="chev" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+      </summary>
+      <div class="sect-body">
+        <div class="group">
+          <span class="label"><span class="tag">&#9673;</span> The verification code</span>
+          <p class="sub">The verification code appears the moment the agent "sends" it. Carriers drop the SMS &mdash; the number isn't A2P&nbsp;10DLC registered &mdash; so this page is the source of truth.</p>
+        </div>
+        <div class="group">
+          <span class="label">&#9776; Keep this on a second screen</span>
+          <ul>
+            <li>Big green number is the live code</li>
+            <li>Latency updates every turn</li>
+            <li>Last six transcript lines follow the call</li>
+          </ul>
+        </div>
+        <div class="group">
+          <span class="label"><span class="tag">&#9888;</span> Latency probe</span>
+          <p class="sub">Chat off-topic for a few minutes, then ask a real pharmacy question and watch time-to-first-sentence. The median should hold steady on that late turn.</p>
+        </div>
+      </div>
+    </details>
+
+    <div class="sidebar-foot">
+      <span class="dot" id="liveDot"></span>
+      <span id="liveText">Waiting</span>
+    </div>
+  </aside>
+
+  <main class="stage" style="grid-template-rows:auto 1fr">
+    <div class="stage-head">Live Calls</div>
+    <div class="calls" id="calls">
+      <div class="placeholder">Waiting for a call&hellip;</div>
+    </div>
+  </main>
+
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const rate = v => v < 1.2 ? 'good' : v < 2 ? 'warn' : 'bad';
+
+function statusOf(c) {
+  if (c.verified) return '<span style="color:var(--green)">Verified</span>';
+  return 'Not yet verified';
+}
+
+function render(data) {
+  const el = $('calls');
+  if (!data.length) {
+    el.innerHTML = '<div class="placeholder">Waiting for a call&hellip;</div>';
+    $('liveDot').className = 'dot';
+    $('liveText').textContent = 'Waiting';
+    return;
+  }
+  const anyLive = data.some(c => !c.ended);
+  $('liveDot').className = 'dot' + (anyLive ? ' live' : '');
+  $('liveText').textContent = anyLive ? 'Live call' : 'Idle';
+
+  el.innerHTML = data.slice().reverse().map(c => {
+    const lat = c.last_latency_s != null ? Number(c.last_latency_s) : null;
+    const tail = (c.transcript_tail || [])
+      .map(t => '<div><b>' + (t.role === 'user' ? 'Caller' : 'Agent') + ':</b> ' + esc(t.content) + '</div>')
+      .join('');
+    return '<div class="call-card">' +
+      '<header>' +
+        '<span class="dot' + (c.ended ? '' : ' live') + '"></span>' +
+        '<b style="color:var(--fg)">' + esc(c.caller || 'Browser session') + '</b>' +
+        '<span>&middot; ' + esc(c.label) + '</span>' +
+        '<span>&middot; ' + (c.ended ? 'ended' : 'live') + '</span>' +
+        '<span>&middot; ' + esc(c.turns) + ' turns</span>' +
+        '<span>&middot; ' + statusOf(c) + '</span>' +
+        '<span class="spacer"></span>' +
+        (lat != null
+          ? '<span class="value ' + rate(lat) + '" style="font:700 14px/1 var(--mono)">' + lat.toFixed(2) + 's</span>'
+          : '') +
+      '</header>' +
+      '<div class="body">' +
+        '<div class="otp-big' + (c.otp ? '' : ' none') + '">' + esc(c.otp || '——————') + '</div>' +
+        '<div class="tail">' + (tail || '<span style="color:var(--dim)">No transcript yet</span>') + '</div>' +
+      '</div>' +
+    '</div>';
+  }).join('');
+}
+
+async function tick() {
+  try {
+    const r = await fetch('/state', { credentials: 'same-origin' });
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    render(await r.json());
+    $('pollDot').className = 'dot on';
+    $('pollStatus').textContent = 'Connected';
+  } catch (e) {
+    $('pollDot').className = 'dot err';
+    $('pollStatus').textContent = 'Lost connection to server';
+  }
+}
+setInterval(tick, 1000);
+tick();
+</script>
+
+<script>
+// The inbound number is deployment config (TWILIO_FROM_NUMBER), served by
+// /capabilities -- never typed into this file. Unset means the phone path is
+// not wired up, so every call-in affordance stays hidden rather than printing
+// a number nobody can dial.
+(async function loadPhone() {
+  let phone = null;
+  try { phone = (await (await fetch('/capabilities')).json()).phone; } catch (e) {}
+  if (!phone) return;
+  document.querySelectorAll('[data-phone-link]').forEach(a => {
+    a.href = 'tel:' + phone.e164;
+    a.hidden = false;
+  });
+  document.querySelectorAll('[data-phone-text]').forEach(el => {
+    el.textContent = phone.display;
+  });
+  document.querySelectorAll('[data-phone-block]').forEach(el => {
+    el.hidden = false;
+  });
+})();
+</script>
+</body>
+</html>

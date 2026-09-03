@@ -1,0 +1,50 @@
+# Deploying the demo to Fly.
+#
+#   fly launch --no-deploy      # first time: claims an app name, writes it here
+#   fly deploy --remote-only    # --remote-only: no local Docker daemon needed
+#
+# ONE machine, always on. /state and /console read in-memory per-call state
+# (app.py ACTIVE), so a second machine serves a console that knows nothing about
+# the live call. Cold starts would also land on the latency number this demo
+# exists to show. Fly re-adds an HA machine on some deploys -- check after
+# deploying and run `fly scale count 1` if it did. Never scale past 1.
+#
+# Set the secrets before the first deploy:
+#   fly secrets set DEEPGRAM_API_KEY=... TWILIO_ACCOUNT_SID=... \
+#                   TWILIO_AUTH_TOKEN=... CONSOLE_PASSWORD=...
+
+app = 'pharmacy-voice-agent'
+primary_region = 'iad'  # Twilio's US media edge (us1) terminates in Ashburn
+
+[build]
+
+[env]
+  # Must match the deployed hostname: the TwiML stream URL is built from it.
+  PUBLIC_URL = 'https://pharmacy-voice-agent.fly.dev'
+  # The inbound number this demo answers on. Empty = phone path off, browser
+  # client only.
+  TWILIO_FROM_NUMBER = ''
+  # Off unless the number is registered for A2P 10DLC -- otherwise US carriers
+  # drop the OTP text anyway, and the send only adds a Twilio round-trip inside
+  # send_otp, on the turn being timed. The operator console shows the code.
+  OTP_SMS = '0'
+
+[http_service]
+  internal_port = 7860
+  force_https = true
+  auto_start_machines = true
+  auto_stop_machines = false
+  min_machines_running = 1
+  processes = ['app']
+
+  [[http_service.checks]]
+    grace_period = '10s'
+    interval = '15s'
+    method = 'GET'
+    path = '/health'
+    timeout = '2s'
+
+[[vm]]
+  # Dedicated vCPU: audio bridging is light, but shared CPUs can be scheduled
+  # away and this demo is judged on latency.
+  size = 'performance-1x'

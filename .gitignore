@@ -1,0 +1,21 @@
+# Credentials. Never commit these.
+.env
+.env.*
+!.env.example
+
+# Local run state: metrics, audio captures, webhook backups, scratch .bak files.
+ops/
+
+# Working notes and prospect-supplied material. Deliberately broad: anything
+# handed to us by a customer stays out of a public repo.
+reference/
+*.pdf
+
+# Python
+.venv/
+__pycache__/
+*.pyc
+
+# Local tooling
+.claude/
+.DS_Store

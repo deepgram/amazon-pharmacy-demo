@@ -1,0 +1,18 @@
+[project]
+name = "pharmacy-livekit-agent"
+version = "0.2.0"
+description = "Amazon Pharmacy demo agent, Path B: LiveKit orchestration + Deepgram nova-3-medical_pharma / gpt-4o-mini / Flux TTS. Same agent as the Voice Agent API demo."
+requires-python = ">=3.11"
+dependencies = [
+    # openai is the shipped think provider: Path A gets gpt-4o-mini from Deepgram
+    # as a managed provider, LiveKit has to call it directly. anthropic stays for
+    # the claude-haiku-4-5 fallback branch in agent/main.py::_think.
+    "livekit-agents[deepgram,openai,anthropic]~=1.7",
+    "livekit-api~=1.0",
+    "twilio>=9.0",
+    "python-dotenv>=1.0",
+    "loguru>=0.7",
+]
+
+[tool.setuptools]
+packages = ["agent"]

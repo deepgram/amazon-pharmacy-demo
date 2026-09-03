@@ -1,0 +1,1016 @@
+{
+  "_comment": "Pharmacy operations knowledge base for the Amazon Pharmacy voice demo. Searched by the search_knowledge_base tool. This exists so the agent stops dead-ending on anything that is not a drug price: delivery, refills, insurance, PillPack, billing, privacy, and support questions all have a grounded answer here. Answers are written to be SPOKEN -- no markdown, no symbols, numbers already in words where they would otherwise be read as digits. Clinical questions deliberately route to a pharmacist rather than answering; that boundary is a compliance line, not a gap. Validate edits with scripts/check_catalog.py.",
+  "schema_version": 1,
+  "entries": [
+    {
+      "id": "delivery-free",
+      "topic": "delivery",
+      "questions": [
+        "how much is delivery",
+        "is shipping free",
+        "do you charge for shipping",
+        "what does delivery cost"
+      ],
+      "answer": "Delivery is free on every prescription order, with no minimum and no membership required."
+    },
+    {
+      "id": "delivery-speed",
+      "topic": "delivery",
+      "questions": [
+        "how fast is delivery",
+        "how long does shipping take",
+        "how many days for delivery",
+        "do you deliver on weekends",
+        "which days do you deliver"
+      ],
+      "answer": "Standard delivery is two days. Many addresses also qualify for same-day delivery, and I can check yours."
+    },
+    {
+      "id": "delivery-same-day",
+      "topic": "delivery",
+      "questions": [
+        "do you have same day delivery",
+        "can I get it today",
+        "is same day available at my address"
+      ],
+      "answer": "Same-day delivery is available at eligible addresses, usually in larger metro areas. Your address is eligible."
+    },
+    {
+      "id": "delivery-tracking",
+      "topic": "delivery",
+      "questions": [
+        "how do I track my order",
+        "where is my package",
+        "can I get a tracking number",
+        "track my shipment"
+      ],
+      "answer": "Every order gets a tracking link by text and email the moment it ships, and it is also on the orders page in the app."
+    },
+    {
+      "id": "delivery-signature",
+      "topic": "delivery",
+      "questions": [
+        "does someone need to sign",
+        "do I have to be home",
+        "will they leave it at the door",
+        "what if I'm not home when it arrives",
+        "what if nobody is home",
+        "can someone else receive it for me",
+        "can my neighbour take it in"
+      ],
+      "answer": "Most orders are left at your door. Controlled medications and refrigerated items need someone to receive them."
+    },
+    {
+      "id": "delivery-address-change",
+      "topic": "delivery",
+      "questions": [
+        "can I change my delivery address",
+        "ship to a different address",
+        "send it somewhere else",
+        "I moved and need to change where you send my prescriptions",
+        "update my shipping address",
+        "send my prescriptions to a new address"
+      ],
+      "answer": "You can change the delivery address in the app or website any time before the order ships. After it ships, we would reship rather than reroute."
+    },
+    {
+      "id": "delivery-cold",
+      "topic": "delivery",
+      "questions": [
+        "how do you ship insulin",
+        "does it stay cold",
+        "refrigerated medication shipping",
+        "cold pack"
+      ],
+      "answer": "Refrigerated medications like insulin and the injectable weight-loss pens ship in an insulated cold pack with a temperature monitor, and they go out on faster service so they arrive cold."
+    },
+    {
+      "id": "delivery-po-box",
+      "topic": "delivery",
+      "questions": [
+        "can you ship to a p o box",
+        "do you deliver to a po box",
+        "military address",
+        "apo"
+      ],
+      "answer": "We can ship to most street addresses and to military addresses. Post office boxes work for standard medications but not for anything requiring a signature or refrigeration."
+    },
+    {
+      "id": "order-status",
+      "topic": "orders",
+      "questions": [
+        "what is the status of my order",
+        "has my order shipped",
+        "is my prescription ready",
+        "where is my order",
+        "when will my order get here",
+        "when will it get here",
+        "when does my order arrive",
+        "when will my medication arrive",
+        "when is it coming",
+        "how soon will it arrive",
+        "is my order on the way",
+        "did my order ship yet"
+      ],
+      "answer": "I can look that up for you right now.",
+      "use_tool": "get_account_info"
+    },
+    {
+      "id": "order-cancel",
+      "topic": "orders",
+      "questions": [
+        "can I cancel my order",
+        "I want to cancel my order",
+        "stop my order",
+        "cancel the order",
+        "call off my order"
+      ],
+      "answer": "You can cancel any order that has not shipped yet, in the app or right here on the phone. Once it ships we would handle it as a return instead."
+    },
+    {
+      "id": "order-history",
+      "topic": "orders",
+      "questions": [
+        "what have I ordered before",
+        "my order history",
+        "past prescriptions",
+        "what did I get last time"
+      ],
+      "answer": "I can read back your recent orders whenever you would like.",
+      "use_tool": "get_account_info"
+    },
+    {
+      "id": "order-delay",
+      "topic": "orders",
+      "questions": [
+        "why is my order late",
+        "my order is delayed",
+        "it has not arrived",
+        "order is stuck"
+      ],
+      "answer": "The two usual reasons are that we are waiting on your prescriber to confirm something, or the shipment is in transit and running behind. I can check which one it is.",
+      "use_tool": "get_account_info"
+    },
+    {
+      "id": "order-partial",
+      "topic": "orders",
+      "questions": [
+        "why did I only get part of my order",
+        "missing item",
+        "one medication is missing"
+      ],
+      "answer": "When one medication in an order needs more time, the rest ships first so you are not waiting. The remaining item follows in its own shipment at no extra cost."
+    },
+    {
+      "id": "order-wrong",
+      "topic": "orders",
+      "questions": [
+        "I got the wrong medication",
+        "wrong pills",
+        "this is not what I ordered"
+      ],
+      "answer": "I am sorry about that. Do not take anything from that shipment. I will get a pharmacist on the line with you right away, and we will replace it at no cost."
+    },
+    {
+      "id": "order-damaged",
+      "topic": "orders",
+      "questions": [
+        "my package was damaged",
+        "the box was crushed",
+        "the medication arrived broken"
+      ],
+      "answer": "We will replace it at no charge. Nothing that arrives damaged should be used, and you do not need to send it back first."
+    },
+    {
+      "id": "order-lost",
+      "topic": "orders",
+      "questions": [
+        "my package never came",
+        "the tracking says delivered but I do not have it",
+        "lost package"
+      ],
+      "answer": "If tracking shows delivered and it is not there, we reship at no cost. I can start that for you now."
+    },
+    {
+      "id": "refill-how",
+      "topic": "refills",
+      "questions": [
+        "how do I get a refill",
+        "request a refill",
+        "I need more of my medication",
+        "reorder"
+      ],
+      "answer": "I can start a refill on any prescription that has refills remaining. If it is out of refills, we contact your prescriber for you."
+    },
+    {
+      "id": "refill-auto",
+      "topic": "refills",
+      "questions": [
+        "what is auto refill",
+        "automatic refills",
+        "do you refill automatically",
+        "subscribe"
+      ],
+      "answer": "Auto-refill ships your medication on a schedule so you do not have to remember. We text you before each shipment, and you can skip or cancel any time."
+    },
+    {
+      "id": "refill-turn-off",
+      "topic": "refills",
+      "questions": [
+        "turn off auto refill",
+        "stop automatic refills",
+        "cancel my subscription",
+        "I do not want auto refill"
+      ],
+      "answer": "I can turn auto-refill off for any medication. Nothing else about the prescription changes, and you can still order manually."
+    },
+    {
+      "id": "refill-early",
+      "topic": "refills",
+      "questions": [
+        "can I refill early",
+        "I need it sooner",
+        "refill too soon",
+        "vacation supply",
+        "what happens if I run out before the next one is due",
+        "can I get it early if I run out"
+      ],
+      "answer": "Insurance usually allows a refill once about three quarters of the current supply is used. For travel, plans often approve a vacation override, and we can request one."
+    },
+    {
+      "id": "refill-none-left",
+      "topic": "refills",
+      "questions": [
+        "I am out of refills",
+        "no refills left",
+        "need a new prescription"
+      ],
+      "answer": "We reach out to your prescriber for a new prescription automatically, usually a few days before you run out. You do not need to call them.",
+      "use_tool": "get_account_info"
+    },
+    {
+      "id": "refill-when-due",
+      "topic": "refills",
+      "questions": [
+        "when is my next refill",
+        "when am I due",
+        "when does my prescription run out"
+      ],
+      "answer": "I can check the refill date on any of your prescriptions.",
+      "use_tool": "get_account_info"
+    },
+    {
+      "id": "refill-90-day",
+      "topic": "refills",
+      "questions": [
+        "can I get a 90 day supply",
+        "three month supply",
+        "larger supply"
+      ],
+      "answer": "Most maintenance medications can go to a longer supply, which usually lowers the cost per month. Insurance bills a ninety day request as an eighty four day supply."
+    },
+    {
+      "id": "transfer-how",
+      "topic": "transfers",
+      "questions": [
+        "how do I transfer my prescription",
+        "move my prescription",
+        "switch pharmacies",
+        "transfer from cvs",
+        "I want to move my prescriptions over from another pharmacy",
+        "switch my prescriptions from the pharmacy down the street"
+      ],
+      "answer": "You give us the pharmacy name and the medication, and we handle the transfer. You do not have to call your old pharmacy."
+    },
+    {
+      "id": "transfer-time",
+      "topic": "transfers",
+      "questions": [
+        "how long does a transfer take",
+        "when will the transfer be done"
+      ],
+      "answer": "Most transfers complete within one business day, and we text you when the prescription is ready to fill."
+    },
+    {
+      "id": "transfer-all",
+      "topic": "transfers",
+      "questions": [
+        "can I transfer everything",
+        "move all my prescriptions",
+        "transfer my whole list"
+      ],
+      "answer": "Yes. We can move every prescription at once, and that is usually the easiest way to start."
+    },
+    {
+      "id": "transfer-controlled",
+      "topic": "transfers",
+      "questions": [
+        "can you transfer my adderall",
+        "transfer a controlled substance",
+        "transfer my pain medication"
+      ],
+      "answer": "Schedule two medications cannot be transferred between pharmacies by law. Your prescriber needs to send us a new electronic prescription instead."
+    },
+    {
+      "id": "new-rx",
+      "topic": "prescriptions",
+      "questions": [
+        "how do I send a new prescription",
+        "my doctor wants to send it",
+        "how does my doctor prescribe"
+      ],
+      "answer": "Your prescriber sends it electronically to Amazon Pharmacy, and it usually reaches us within minutes. They can also fax or call it in."
+    },
+    {
+      "id": "new-rx-paper",
+      "topic": "prescriptions",
+      "questions": [
+        "I have a paper prescription",
+        "can I mail my prescription",
+        "written prescription"
+      ],
+      "answer": "A paper prescription needs to come from your prescriber directly to us, so the quickest path is to ask their office to send it electronically."
+    },
+    {
+      "id": "rx-expired",
+      "topic": "prescriptions",
+      "questions": [
+        "my prescription expired",
+        "prescription is too old",
+        "expired script"
+      ],
+      "answer": "Most prescriptions are good for one year from the date written. When one expires we request a new one from your prescriber for you."
+    },
+    {
+      "id": "insurance-accepted",
+      "topic": "insurance",
+      "questions": [
+        "do you take my insurance",
+        "what insurance do you accept",
+        "is my plan accepted",
+        "do you accept medicare",
+        "do you take blue cross",
+        "do you take aetna",
+        "do you take cigna",
+        "do you take united healthcare",
+        "do you take humana",
+        "do you take kaiser",
+        "do you take tricare",
+        "do you accept medicaid",
+        "is blue cross blue shield accepted"
+      ],
+      "answer": "We accept most major plans, including commercial insurance, Medicare Part D, and many Medicaid plans. I can check what is on your account."
+    },
+    {
+      "id": "insurance-add",
+      "topic": "insurance",
+      "questions": [
+        "how do I add my insurance",
+        "update my insurance",
+        "new insurance card",
+        "change my plan"
+      ],
+      "answer": "You can add or update a plan in the app, on the website, or with a representative. We re-run your prices as soon as it is on file.",
+      "use_tool": "get_account_info"
+    },
+    {
+      "id": "insurance-why-price-changed",
+      "topic": "insurance",
+      "questions": [
+        "why did my price change",
+        "it cost more this time",
+        "price went up",
+        "why did the price go up from what I paid last time",
+        "the same prescription cost more this time"
+      ],
+      "answer": "The usual reasons are a new plan year resetting your deductible, a change in your plan's covered drug list, or a switch between brand and generic. I can have a representative walk through the specific claim with you."
+    },
+    {
+      "id": "insurance-deductible",
+      "topic": "insurance",
+      "questions": [
+        "what is a deductible",
+        "why am I paying full price",
+        "have I met my deductible"
+      ],
+      "answer": "A deductible is the amount you pay yourself before your plan starts covering. Early in the plan year prices often look high for that reason. Your plan can tell you exactly where you stand."
+    },
+    {
+      "id": "insurance-prior-auth",
+      "topic": "insurance",
+      "questions": [
+        "what is a prior authorization",
+        "my medication needs approval",
+        "prior auth",
+        "insurance wants approval"
+      ],
+      "answer": "A prior authorization is your plan asking the prescriber to confirm why you need a specific medication. We start it for you and follow up with both sides, and it usually takes a few business days."
+    },
+    {
+      "id": "insurance-denied",
+      "topic": "insurance",
+      "questions": [
+        "my insurance denied it",
+        "claim was rejected",
+        "insurance will not cover it"
+      ],
+      "answer": "When a plan declines, the common paths are a prior authorization, a covered alternative your prescriber can switch you to, or paying the cash price if it is lower. I can have a representative go through the options with you."
+    },
+    {
+      "id": "insurance-no-insurance",
+      "topic": "insurance",
+      "questions": [
+        "I do not have insurance",
+        "I am uninsured",
+        "cash price only",
+        "self pay",
+        "how do I get my medication cheaper without insurance",
+        "my insurance will not cover it what are my options"
+      ],
+      "answer": "You do not need insurance to fill with us. We show a cash price on everything, and for many generics that price is lower than a typical copay."
+    },
+    {
+      "id": "insurance-hsa",
+      "topic": "insurance",
+      "questions": [
+        "can I use my hsa",
+        "fsa card",
+        "health savings account"
+      ],
+      "answer": "Health savings account and flexible spending account cards both work, and every order comes with an itemized receipt you can submit."
+    },
+    {
+      "id": "price-cash-vs-insurance",
+      "topic": "pricing",
+      "questions": [
+        "is cash cheaper than insurance",
+        "which price is lower",
+        "should I use my insurance",
+        "do you offer a discount for cash",
+        "is it cheaper if I just pay cash"
+      ],
+      "answer": "We show both prices side by side and you pay whichever is lower. For a lot of generics the cash price wins."
+    },
+    {
+      "id": "price-estimate",
+      "topic": "pricing",
+      "questions": [
+        "is that price exact",
+        "will I really pay that",
+        "is the price guaranteed"
+      ],
+      "answer": "The insurance price is an estimate based on what other customers on similar plans paid, so your actual price can differ. The cash price is exact."
+    },
+    {
+      "id": "price-rxpass",
+      "topic": "pricing",
+      "questions": [
+        "what is rxpass",
+        "flat rate prescriptions",
+        "five dollars a month",
+        "is that subscription thing worth it",
+        "do you have a subscription for my generics",
+        "flat monthly fee for generics"
+      ],
+      "answer": "RxPass is a flat monthly add-on for Prime members that covers a set list of common generics for one price, with delivery included. It is not insurance and does not cover every medication."
+    },
+    {
+      "id": "price-prime",
+      "topic": "pricing",
+      "questions": [
+        "do I need prime",
+        "is there a discount for prime members",
+        "prime savings"
+      ],
+      "answer": "You do not need Prime to fill a prescription or to get free delivery. Prime members get access to RxPass and to additional savings on some medications."
+    },
+    {
+      "id": "price-coupon",
+      "topic": "pricing",
+      "questions": [
+        "do you take coupons",
+        "manufacturer coupon",
+        "savings card",
+        "goodrx"
+      ],
+      "answer": "When a manufacturer savings card is on file for your medication, we apply it automatically. You do not need to bring a separate coupon."
+    },
+    {
+      "id": "price-generic",
+      "topic": "pricing",
+      "questions": [
+        "is there a generic",
+        "cheaper version",
+        "generic alternative"
+      ],
+      "answer": "When a generic exists, we show it and it is almost always the lower price. Whether it is right for you is a question for your prescriber, and they can send a new prescription if they agree."
+    },
+    {
+      "id": "price-why-expensive",
+      "topic": "pricing",
+      "questions": [
+        "why is my medication so expensive",
+        "that seems high",
+        "why does it cost that much"
+      ],
+      "answer": "Brand medications with no generic are the usual reason, especially before a deductible is met. A manufacturer savings card, a longer day supply, or a covered alternative can each bring it down, and I can check those."
+    },
+    {
+      "id": "price-goodrx",
+      "topic": "pricing",
+      "questions": [
+        "can I use goodrx",
+        "discount card",
+        "third party discount"
+      ],
+      "answer": "We compare your insurance price against our cash price automatically and charge the lower one, so an outside discount card is usually not needed."
+    },
+    {
+      "id": "payment-methods",
+      "topic": "payment",
+      "questions": [
+        "how do I pay",
+        "what payment do you take",
+        "can I pay with a card",
+        "can I pay with two cards",
+        "can I split the payment"
+      ],
+      "answer": "Any card on your Amazon account works, along with health savings and flexible spending cards. Payment is taken when the order ships."
+    },
+    {
+      "id": "payment-when",
+      "topic": "payment",
+      "questions": [
+        "when am I charged",
+        "do you charge upfront",
+        "when does the payment come out",
+        "do you charge me now or when it ships",
+        "am I charged when it arrives or right now",
+        "when does the money come out"
+      ],
+      "answer": "You are charged when the order ships, not when you place it."
+    },
+    {
+      "id": "payment-receipt",
+      "topic": "payment",
+      "questions": [
+        "can I get a receipt",
+        "itemized receipt",
+        "tax records",
+        "insurance reimbursement"
+      ],
+      "answer": "Every order has an itemized receipt in the app and by email, and it includes everything a plan or a tax filing needs."
+    },
+    {
+      "id": "payment-fsa-denied",
+      "topic": "payment",
+      "questions": [
+        "my fsa card was declined",
+        "health card did not work"
+      ],
+      "answer": "That usually means the card needs the purchase itemized or the balance is short. Paying with a regular card and submitting the itemized receipt for reimbursement always works."
+    },
+    {
+      "id": "pillpack-what",
+      "topic": "pillpack",
+      "questions": [
+        "what is pillpack",
+        "how does pillpack work",
+        "tell me about pillpack"
+      ],
+      "answer": "PillPack sorts your medications into individual packets, each labeled with the date and time to take it. It is built for people taking several medications a day, and it comes at no extra cost."
+    },
+    {
+      "id": "pillpack-who",
+      "topic": "pillpack",
+      "questions": [
+        "who should use pillpack",
+        "is pillpack right for me",
+        "do I qualify for pillpack"
+      ],
+      "answer": "PillPack is a good fit if you take more than one medication on a schedule. There is no extra charge, and you can move back to standard bottles any time."
+    },
+    {
+      "id": "pillpack-cost",
+      "topic": "pillpack",
+      "questions": [
+        "how much does pillpack cost",
+        "is pillpack extra",
+        "pillpack fee"
+      ],
+      "answer": "There is no additional cost for PillPack. You pay the same medication prices, and the packaging and delivery are included."
+    },
+    {
+      "id": "pillpack-switch",
+      "topic": "pillpack",
+      "questions": [
+        "how do I switch to pillpack",
+        "sign up for pillpack",
+        "move to pillpack"
+      ],
+      "answer": "We move your prescriptions over, set the schedule with you, and your first packet roll ships from there. Nothing needs to change with your prescriber."
+    },
+    {
+      "id": "pillpack-otc",
+      "topic": "pillpack",
+      "questions": [
+        "can you put my vitamins in the packets",
+        "over the counter in pillpack",
+        "add supplements"
+      ],
+      "answer": "Many over-the-counter items and vitamins can go into your packets alongside your prescriptions."
+    },
+    {
+      "id": "pillpack-change",
+      "topic": "pillpack",
+      "questions": [
+        "my medication changed",
+        "new dose",
+        "update my pillpack"
+      ],
+      "answer": "When a dose changes, we update the packets going forward and tell you what to do with the roll you already have."
+    },
+    {
+      "id": "controlled-what",
+      "topic": "controlled substances",
+      "questions": [
+        "what is a controlled substance",
+        "schedule two",
+        "controlled medication rules"
+      ],
+      "answer": "Controlled medications are ones with extra federal handling rules. Schedule two, like Adderall or oxycodone, cannot be transferred between pharmacies, cannot exceed a thirty day supply, and needs a new electronic prescription each time."
+    },
+    {
+      "id": "controlled-refill",
+      "topic": "controlled substances",
+      "questions": [
+        "can I refill my adderall",
+        "refills on controlled medication"
+      ],
+      "answer": "Schedule two prescriptions have no refills. Your prescriber sends a new one each time, and they can post-date them so you are covered month to month."
+    },
+    {
+      "id": "controlled-delivery",
+      "topic": "controlled substances",
+      "questions": [
+        "how are controlled medications delivered",
+        "signature for adderall"
+      ],
+      "answer": "Controlled medications ship with signature required, so someone needs to be there to receive them."
+    },
+    {
+      "id": "controlled-shortage",
+      "topic": "controlled substances",
+      "questions": [
+        "adderall shortage",
+        "stimulant shortage",
+        "cannot find my adhd medication"
+      ],
+      "answer": "Supply on some stimulants has been tight nationally. When we cannot fill one, we tell you the same day so your prescriber can look at alternatives."
+    },
+    {
+      "id": "pharmacist-talk",
+      "topic": "pharmacist",
+      "questions": [
+        "can I talk to a pharmacist",
+        "I want to speak to a pharmacist",
+        "pharmacist consultation"
+      ],
+      "answer": "A pharmacist is available twenty four hours a day, seven days a week, at no cost. I can connect you now or have one call you back."
+    },
+    {
+      "id": "pharmacist-when",
+      "topic": "pharmacist",
+      "questions": [
+        "when should I talk to a pharmacist",
+        "what can a pharmacist help with"
+      ],
+      "answer": "A pharmacist is the right person for anything clinical: how to take something, side effects, interactions, or whether two medications work together. I can bring one in whenever you want."
+    },
+    {
+      "id": "side-effects",
+      "topic": "clinical",
+      "questions": [
+        "what are the side effects",
+        "will this make me sick",
+        "is this safe",
+        "side effects of my medication"
+      ],
+      "answer": "Every prescription ships with the full information sheet, and a pharmacist can go through what to expect and what to watch for. I will connect you with one rather than guess."
+    },
+    {
+      "id": "interaction",
+      "topic": "clinical",
+      "questions": [
+        "can I take these together",
+        "drug interaction",
+        "will this interact",
+        "is it safe with my other medication"
+      ],
+      "answer": "That is exactly what our pharmacists check, and they have your full medication list in front of them. Let me get one on the line for you."
+    },
+    {
+      "id": "missed-dose",
+      "topic": "clinical",
+      "questions": [
+        "I missed a dose",
+        "what if I forget to take it",
+        "skipped a dose"
+      ],
+      "answer": "A pharmacist can tell you what to do for your specific medication, since the answer differs by drug. I can connect you right now."
+    },
+    {
+      "id": "dose-question",
+      "topic": "clinical",
+      "questions": [
+        "which strength should I take",
+        "how much should I take",
+        "what dose do I need"
+      ],
+      "answer": "That one is for your prescriber or a pharmacist, since it depends on your history. I can connect you to a pharmacist, or your prescriber can send an updated prescription."
+    },
+    {
+      "id": "storage",
+      "topic": "clinical",
+      "questions": [
+        "how do I store this",
+        "does it need refrigeration",
+        "can I leave it out",
+        "storage instructions"
+      ],
+      "answer": "Most tablets are fine at room temperature away from heat and moisture. Insulin and the injectable weight-loss pens need refrigeration until first use. A pharmacist can confirm for your specific medication."
+    },
+    {
+      "id": "expired-medication",
+      "topic": "clinical",
+      "questions": [
+        "my medication expired",
+        "can I take expired medication",
+        "past the expiration date"
+      ],
+      "answer": "Do not take anything past its expiration date. I can start a replacement order, and a pharmacist can advise on the gap."
+    },
+    {
+      "id": "disposal",
+      "topic": "clinical",
+      "questions": [
+        "how do I dispose of medication",
+        "throw away old pills",
+        "get rid of medication"
+      ],
+      "answer": "Most communities have take-back programs, and many pharmacies and police stations have drop boxes. A pharmacist can point you to the right option for a controlled medication."
+    },
+    {
+      "id": "account-update",
+      "topic": "account",
+      "questions": [
+        "how do I update my account",
+        "change my phone number",
+        "update my email",
+        "change my address"
+      ],
+      "answer": "You can update your phone, email, or address in the app or on the website, and a representative can do it with you on the phone."
+    },
+    {
+      "id": "account-profile",
+      "topic": "account",
+      "questions": [
+        "what is on my account",
+        "my profile",
+        "my information"
+      ],
+      "answer": "I can read back what is on your account once you are verified.",
+      "use_tool": "get_account_info"
+    },
+    {
+      "id": "account-allergies",
+      "topic": "account",
+      "questions": [
+        "how do I add an allergy",
+        "update my allergies",
+        "medical history"
+      ],
+      "answer": "Allergies and conditions can be added in your health profile in the app, and our pharmacists check them against every prescription before it fills."
+    },
+    {
+      "id": "account-dependent",
+      "topic": "account",
+      "questions": [
+        "can I manage my child's prescriptions",
+        "family member",
+        "caregiver access",
+        "my spouse's medication",
+        "can I manage my kid's medicine on my own account",
+        "my child needs his medication on my account"
+      ],
+      "answer": "You can add family members to your account and manage their prescriptions, with the right permissions for adults."
+    },
+    {
+      "id": "account-close",
+      "topic": "account",
+      "questions": [
+        "how do I close my account",
+        "delete my account",
+        "stop using amazon pharmacy"
+      ],
+      "answer": "A representative can close the account or move your prescriptions to another pharmacy, whichever you prefer."
+    },
+    {
+      "id": "privacy-hipaa",
+      "topic": "privacy",
+      "questions": [
+        "is my information private",
+        "hipaa",
+        "who can see my prescriptions",
+        "is this confidential"
+      ],
+      "answer": "Your pharmacy information is protected health information and is kept separate from your shopping history. It is not used for advertising."
+    },
+    {
+      "id": "privacy-recording",
+      "topic": "privacy",
+      "questions": [
+        "are you recording this call",
+        "is this call recorded"
+      ],
+      "answer": "Yes, calls are recorded for quality and security, and that was in the greeting at the start."
+    },
+    {
+      "id": "privacy-packaging",
+      "topic": "privacy",
+      "questions": [
+        "is the packaging discreet",
+        "will the box say what is inside",
+        "discreet shipping"
+      ],
+      "answer": "Packaging is plain and does not show the medication name on the outside."
+    },
+    {
+      "id": "app-download",
+      "topic": "support",
+      "questions": [
+        "is there an app",
+        "how do I get the app",
+        "download the app"
+      ],
+      "answer": "The Amazon app has a pharmacy section with your prescriptions, orders, and prices, and there is a full pharmacy site as well."
+    },
+    {
+      "id": "hours",
+      "topic": "support",
+      "questions": [
+        "what are your hours",
+        "are you open",
+        "when can I call",
+        "are you open on weekends"
+      ],
+      "answer": "The pharmacy line and our pharmacists are available twenty four hours a day, seven days a week, including holidays."
+    },
+    {
+      "id": "phone-number",
+      "topic": "support",
+      "questions": [
+        "what is your phone number",
+        "how do I call you back",
+        "customer service number"
+      ],
+      "answer": "The pharmacy line is eight five five, seven four five, five seven two five."
+    },
+    {
+      "id": "human-rep",
+      "topic": "support",
+      "questions": [
+        "I want to talk to a person",
+        "transfer me to a human",
+        "real person",
+        "representative",
+        "can I speak to a human",
+        "can I talk to a real person",
+        "get me a person",
+        "I want to speak to someone"
+      ],
+      "answer": "Of course. I can connect you with a pharmacy representative, or a pharmacist if it is about your medication."
+    },
+    {
+      "id": "complaint",
+      "topic": "support",
+      "questions": [
+        "I want to make a complaint",
+        "this is unacceptable",
+        "I am not happy",
+        "file a complaint"
+      ],
+      "answer": "I am sorry, and I want to get this to the right person. Let me bring in a representative who can look at the whole account and make it right."
+    },
+    {
+      "id": "vaccines",
+      "topic": "support",
+      "questions": [
+        "do you give vaccines",
+        "flu shot",
+        "can I get vaccinated",
+        "do you do vaccines",
+        "can I get a flu shot here"
+      ],
+      "answer": "We are a mail-order pharmacy, so we do not give vaccines in person. Your prescriber or a local pharmacy can handle those."
+    },
+    {
+      "id": "pet-medication",
+      "topic": "support",
+      "questions": [
+        "do you fill pet prescriptions",
+        "medication for my dog",
+        "veterinary"
+      ],
+      "answer": "We fill human medications only. A veterinary pharmacy would be the right place for a pet prescription."
+    },
+    {
+      "id": "otc-items",
+      "topic": "support",
+      "questions": [
+        "do you sell over the counter",
+        "can I order vitamins",
+        "non prescription items"
+      ],
+      "answer": "Over-the-counter items and vitamins are available on Amazon, and many can be added into PillPack packets alongside your prescriptions."
+    },
+    {
+      "id": "recall",
+      "topic": "support",
+      "questions": [
+        "was my medication recalled",
+        "recall notice",
+        "is there a recall"
+      ],
+      "answer": "If anything you have received is recalled, we contact you directly by phone and email with what to do. A representative can check whether anything on your account is affected."
+    },
+    {
+      "id": "out-of-catalog",
+      "topic": "support",
+      "questions": [
+        "do you carry something not on the list",
+        "I did not find my medication",
+        "you do not have my drug"
+      ],
+      "answer": "We carry a very wide range, so let me look it up rather than assume. If it turns out we cannot fill it, a pharmacist can suggest what to ask your prescriber."
+    },
+    {
+      "id": "pickup-mail-order",
+      "topic": "delivery",
+      "questions": [
+        "can I pick it up",
+        "can I pick it up in store",
+        "do you have a physical pharmacy",
+        "is there a store I can go to",
+        "can I collect it instead",
+        "do you have a pharmacy counter"
+      ],
+      "answer": "We're a mail-order pharmacy, so there's no counter to collect from. Everything ships to you, free two-day delivery on every order, and same-day at eligible addresses."
+    },
+    {
+      "id": "returns",
+      "topic": "orders",
+      "questions": [
+        "can I return a medication",
+        "can I send it back",
+        "I want a refund",
+        "what is your return policy"
+      ],
+      "answer": "Dispensed prescriptions can't be returned once they've left us, which is a federal rule rather than our policy. If something arrived wrong, damaged, or you didn't order it, we replace it at no cost and a pharmacist can help sort it out."
+    },
+    {
+      "id": "generic-appearance",
+      "topic": "pricing",
+      "questions": [
+        "the pills look different",
+        "why do my pills look different this time",
+        "this is a different colour than last time",
+        "did you change my medication"
+      ],
+      "answer": "That usually means the generic came from a different manufacturer this time. The medication and the strength are the same. If anything looks off to you, a pharmacist can check the specific fill against your prescription."
+    },
+    {
+      "id": "shipping-coverage",
+      "topic": "delivery",
+      "questions": [
+        "do you ship to Alaska",
+        "do you ship to my state",
+        "where do you deliver",
+        "do you ship to Hawaii",
+        "can you ship out of state"
+      ],
+      "answer": "We ship to most addresses across the United States. If yours turns out not to be covered, a pharmacy representative can tell you right away and go through the options with you."
+    },
+    {
+      "id": "authenticity",
+      "topic": "support",
+      "questions": [
+        "how do I know it's the real thing",
+        "is this a legitimate pharmacy",
+        "are these genuine medications",
+        "is it safe to order from you"
+      ],
+      "answer": "We're a licensed pharmacy and everything is dispensed and sealed by us before it ships. Your medication comes with the usual pharmacy labelling and paperwork, and a pharmacist is available if you have questions about a specific fill."
+    }
+  ]
+}

@@ -1,0 +1,200 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Data Browser — Pharmacy Voice Agent</title>
+<link rel="icon" type="image/png" sizes="32x32" href="/static/favicon.png">
+<link rel="apple-touch-icon" href="/static/apple-touch-icon.png">
+<link rel="stylesheet" href="/static/app.css">
+</head>
+<body>
+
+<header>
+  <span class="wordmark">Deepgram</span>
+  <span class="rule"></span>
+  <span class="title">Data Browser</span>
+  <a class="call-pill" data-phone-link href="#" hidden>
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.9.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+    Call <span data-phone-text></span>
+    <span class="arrow">&rarr;</span>
+  </a>
+  <span class="spacer"></span>
+  <div class="segmented">
+    <button onclick="location.href='/'">&#8592; Transcript</button>
+    <button aria-selected="true">Data</button>
+  </div>
+</header>
+
+<div class="shell db">
+
+  <aside class="db-rail">
+    <div class="db-brand">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
+      Data Browser
+    </div>
+    <nav id="rail" class="db-nav"></nav>
+    <div class="db-rail-foot">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      <span id="synced">Loading&hellip;</span>
+      <button id="refresh" class="db-refresh" title="Reload from the server" aria-label="Reload">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+      </button>
+    </div>
+  </aside>
+
+  <main class="db-main">
+    <div class="db-head">
+      <h1 id="title">&nbsp;</h1>
+      <span class="db-count" id="count"></span>
+      <span class="db-src" id="src"></span>
+      <span class="spacer"></span>
+      <div class="db-search">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input id="q" type="search" placeholder="Search&hellip;" autocomplete="off" spellcheck="false">
+      </div>
+    </div>
+
+    <div class="db-scroll">
+      <table class="db-table">
+        <thead id="thead"></thead>
+        <tbody id="tbody"></tbody>
+      </table>
+      <p class="db-empty" id="empty" hidden>No rows match that search.</p>
+    </div>
+
+    <div class="db-foot">
+      <span id="viewing"></span>
+      <span class="spacer"></span>
+      <span class="db-dim">Everything the agent can answer from &middot; read-only</span>
+    </div>
+  </main>
+
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+
+const ICONS = {
+  pill:  '<path d="M10.5 20.5 3.5 13.5a5 5 0 0 1 7-7l7 7a5 5 0 0 1-7 7Z"/><path d="m8.5 8.5 7 7"/>',
+  book:  '<path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>',
+  flask: '<path d="M9 3h6"/><path d="M10 3v6.5L4.5 19a2 2 0 0 0 1.7 3h11.6a2 2 0 0 0 1.7-3L14 9.5V3"/>',
+  box:   '<path d="M21 8v13H3V8"/><path d="M1 3h22v5H1z"/><path d="M10 12h4"/>',
+};
+
+let DATA = null;
+let active = null;
+
+function svg(name) {
+  return '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" '
+       + 'stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">' + (ICONS[name] || '') + '</svg>';
+}
+
+// Values come from JSON we render as text, never as markup — a medication note
+// with an angle bracket in it must not become an element.
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c =>
+  ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+const LABEL = c => c.replace(/_/g, ' ');
+
+// Columns whose values are identifiers or figures rather than prose. These get
+// the mono/accent treatment; the long prose columns stay in the body face so a
+// 200-character answer is still readable.
+const TIGHT = new Set(['name', 'medication', 'strength', 'day_supply', 'refills',
+                       'total', 'stock', 'schedule', 'topic', 'status',
+                       'also_asked', 'placed', 'arrives']);
+
+function renderRail() {
+  $('rail').innerHTML = DATA.collections.map(c =>
+    '<button class="db-item' + (c.id === active ? ' on' : '') + '" data-id="' + c.id + '">'
+    + svg(c.icon)
+    + '<span class="db-item-label">' + esc(c.label) + '</span>'
+    + '<span class="db-badge">' + c.rows.length + '</span>'
+    + '</button>').join('');
+  $('rail').querySelectorAll('.db-item').forEach(b =>
+    b.onclick = () => { active = b.dataset.id; $('q').value = ''; render(); });
+}
+
+function current() { return DATA.collections.find(c => c.id === active); }
+
+function render() {
+  const c = current();
+  renderRail();
+  $('title').textContent = c.label.replace(/^./, m => m.toUpperCase());
+  $('count').textContent = c.rows.length + (c.rows.length === 1 ? ' record' : ' records');
+  $('src').textContent = c.source;
+
+  const q = $('q').value.trim().toLowerCase();
+  const rows = q
+    ? c.rows.filter(r => c.columns.some(k => String(r[k] ?? '').toLowerCase().includes(q)))
+    : c.rows;
+
+  $('thead').innerHTML = '<tr>' + c.columns.map(k =>
+    '<th' + (TIGHT.has(k) ? ' class="tight"' : '') + '>' + esc(LABEL(k)) + '</th>').join('') + '</tr>';
+
+  $('tbody').innerHTML = rows.map(r => '<tr>' + c.columns.map((k, i) => {
+    const cls = [];
+    if (TIGHT.has(k)) cls.push('tight');
+    if (i === 0) cls.push('key');
+    return '<td' + (cls.length ? ' class="' + cls.join(' ') + '"' : '') + '>'
+         + esc(r[k]) + '</td>';
+  }).join('') + '</tr>').join('');
+
+  $('empty').hidden = rows.length > 0;
+  $('viewing').textContent = q
+    ? 'Viewing ' + rows.length + ' of ' + c.rows.length + ' records'
+    : 'Viewing ' + c.rows.length + ' records';
+}
+
+async function load() {
+  $('synced').textContent = 'Loading…';
+  try {
+    const r = await fetch('/data-api', { cache: 'no-store' });
+    if (!r.ok) throw new Error(r.status);
+    DATA = await r.json();
+    if (!active || !current()) active = DATA.collections[0].id;
+    render();
+    $('synced').textContent = 'Synced ' + new Date().toLocaleTimeString();
+  } catch (e) {
+    $('synced').textContent = 'Could not load the data';
+    $('tbody').innerHTML = '';
+    $('title').textContent = 'Unavailable';
+    $('empty').hidden = false;
+    $('empty').textContent = 'Could not reach /data-api. Is the server running?';
+  }
+}
+
+$('q').addEventListener('input', () => { if (DATA) render(); });
+$('refresh').addEventListener('click', load);
+// "/" focuses search, the way it does in most data tools
+document.addEventListener('keydown', e => {
+  if (e.key === '/' && document.activeElement !== $('q')) { e.preventDefault(); $('q').focus(); }
+  if (e.key === 'Escape' && document.activeElement === $('q')) { $('q').value = ''; render(); $('q').blur(); }
+});
+
+load();
+</script>
+
+<script>
+// The inbound number is deployment config (TWILIO_FROM_NUMBER), served by
+// /capabilities -- never typed into this file. Unset means the phone path is
+// not wired up, so every call-in affordance stays hidden rather than printing
+// a number nobody can dial.
+(async function loadPhone() {
+  let phone = null;
+  try { phone = (await (await fetch('/capabilities')).json()).phone; } catch (e) {}
+  if (!phone) return;
+  document.querySelectorAll('[data-phone-link]').forEach(a => {
+    a.href = 'tel:' + phone.e164;
+    a.hidden = false;
+  });
+  document.querySelectorAll('[data-phone-text]').forEach(el => {
+    el.textContent = phone.display;
+  });
+  document.querySelectorAll('[data-phone-block]').forEach(el => {
+    el.hidden = false;
+  });
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,642 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pharmacy Voice Agent — Deepgram</title>
+<link rel="icon" type="image/png" sizes="32x32" href="/static/favicon.png">
+<link rel="apple-touch-icon" href="/static/apple-touch-icon.png">
+<link rel="stylesheet" href="/static/app.css">
+</head>
+<body>
+
+<header>
+  <span class="wordmark">Deepgram</span>
+  <span class="rule"></span>
+  <span class="title">Pharmacy Voice Agent</span>
+  <a class="call-pill" data-phone-link href="#" hidden>
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.9.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+    Call <span data-phone-text></span>
+    <span class="arrow">&rarr;</span>
+  </a>
+  <span class="spacer"></span>
+  <div class="segmented">
+    <button aria-selected="true">Transcript</button>
+    <button onclick="location.href='/data'">Data</button>
+  </div>
+</header>
+
+<div class="shell">
+
+  <aside class="sidebar">
+    <div class="status-pill">
+      <span class="dot" id="micDot"></span>
+      <span id="micStatus">Microphone: Not active</span>
+    </div>
+
+    <div class="callin" data-phone-block hidden>
+      <span class="label">Call in</span>
+      <a class="number" data-phone-link href="#" hidden><span data-phone-text></span></a>
+      <div class="hint">The same agent, over the phone</div>
+    </div>
+
+    <details class="sect" open>
+      <summary>
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></svg>
+        Demo Guide
+        <svg class="chev" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+      </summary>
+      <div class="sect-body">
+
+        <div class="group">
+          <span class="label"><span class="tag">&#9673;</span> Scenario</span>
+          <p>Amazon Pharmacy &amp; PillPack inbound support</p>
+          <p class="sub">Verify by code, then medication availability and pricing</p>
+        </div>
+
+        <div class="group">
+          <span class="label">&#128172; Try saying</span>
+          <ul class="quotes">
+            <li>"Yes."</li>
+            <li>"Okay let me check." <span class="sub">(then stay silent)</span></li>
+            <li>"It is 9 3 6 7 2 2."</li>
+            <li>"No, actually I wanted to check if you guys sell Cetpound."</li>
+            <li>"I believe 12.5."</li>
+            <li>"I think my insurance would cover 30 days to get it started."</li>
+            <li>"Let me change my mind. I want to look for 90 days."</li>
+          </ul>
+          <p class="sub" style="margin-top:8px">The reference call, verbatim.</p>
+        </div>
+
+        <div class="group">
+          <span class="label">&#9776; Call flow</span>
+          <ul>
+            <li>Verify with the six-digit code</li>
+            <li>Confirm the open Aspirin order</li>
+            <li>Look up the medication</li>
+            <li>Quote insurance, coupon, cash</li>
+            <li>Offer transfer &amp; same-day delivery</li>
+          </ul>
+        </div>
+
+        <div class="group">
+          <span class="label"><span class="tag">&#9888;</span> Stress tests</span>
+          <ul>
+            <li>Wrong code twice &rarr; graceful close</li>
+            <li>Mispronounce a drug &rarr; asks, never guesses</li>
+            <li>Ask for Wegovy &rarr; out of stock</li>
+            <li>Talk over it &rarr; stops immediately</li>
+            <li>Ask a price before verifying &rarr; declined</li>
+            <li>"This is an emergency" &rarr; dial 911</li>
+          </ul>
+        </div>
+
+        <div class="group">
+          <span class="label"><span class="tag g">&#9881;</span> Under the hood</span>
+          <p class="mono-note" id="stackNote">Loading&hellip;</p>
+        </div>
+
+      </div>
+    </details>
+
+    <details class="sect">
+      <summary>
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.5 20.5 3.5 13.5a5 5 0 0 1 7-7l7 7a5 5 0 0 1-7 7Z"/><path d="m8.5 8.5 7 7"/></svg>
+        Catalog
+        <svg class="chev" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+      </summary>
+      <div class="sect-body">
+        <div class="group">
+          <span class="label">Stocked <span id="medCount">&mdash;</span></span>
+          <p class="sub" id="medNote">Loading&hellip;</p>
+          <ul id="medFeatured"></ul>
+        </div>
+        <div class="group">
+          <span class="label"><span class="tag">&#9888;</span> Out of stock</span>
+          <p class="sub" id="medOut">&mdash;</p>
+        </div>
+      </div>
+    </details>
+
+    <details class="sect">
+      <summary>
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 6.25a5.75 5.75 0 0 1 8 5.25c0 2-1 3.4-2.2 4.5-.8.75-1.3 1.4-1.3 2.5v.5H7.5v-.5c0-1.1-.5-1.75-1.3-2.5C5 14.9 4 13.5 4 11.5A5.75 5.75 0 0 1 12 6.25Z"/><path d="M9.5 22h5"/></svg>
+        Also ask about
+        <svg class="chev" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+      </summary>
+      <div class="sect-body">
+        <div class="group">
+          <span class="label">Pharmacy questions <span id="kbCount">&mdash;</span></span>
+          <p class="sub">Not just drugs and prices &mdash; ask in full sentences, that is the harder case.</p>
+          <ul id="kbTopics"></ul>
+        </div>
+        <div class="group">
+          <span class="label">This caller's account</span>
+          <p class="sub" id="kbAccount">&mdash;</p>
+        </div>
+      </div>
+    </details>
+
+    <div class="sidebar-foot">
+      <span class="dot" id="liveDot"></span>
+      <span id="liveText">Idle</span>
+    </div>
+  </aside>
+
+  <main class="stage">
+    <div class="stage-head">Call Transcript</div>
+
+    <div class="metrics">
+      <div class="metric otp">
+        <span class="label">Verification code</span>
+        <div class="value idle" id="mOtp">&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;</div>
+      </div>
+      <div class="metric">
+        <span class="label">Status</span>
+        <div class="value idle" id="mStatus">Not started</div>
+      </div>
+    </div>
+
+    <div class="empty" id="emptyState">
+      <div class="card">
+        <div class="orb">
+          <svg width="27" height="27" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="22"/></svg>
+        </div>
+        <h2>Talk to the pharmacy agent</h2>
+        <p>Start the voice agent and verify with the six-digit code, then ask about a medication's availability, strengths, or price. Or dial the number to try the same agent over the phone.</p>
+        <button class="btn block" id="startBtn">Start Voice Agent</button>
+        <div class="or">or</div>
+        <a class="btn ghost block" data-phone-link href="#" hidden>
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.9.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+          Call <span data-phone-text></span>
+        </a>
+        <p class="foot">Headphones recommended to avoid echo.</p>
+      </div>
+    </div>
+
+    <div class="transcript" id="transcript" hidden></div>
+
+    <div class="composer" id="composer" hidden>
+      <input id="digits" inputmode="numeric" maxlength="6" placeholder="Type the 6-digit code (keypad)" aria-label="Keypad entry">
+      <button class="btn ghost" id="sendDigits">Send</button>
+      <button class="btn ghost" id="muteBtn" aria-pressed="false" title="Mute your microphone (shortcut: M)">Mute mic</button>
+      <button class="btn danger" id="stopBtn">End call</button>
+    </div>
+
+    <div class="composer" id="afterCall" hidden>
+      <span class="hint" id="afterCallNote">Call ended.</span>
+      <button class="btn ghost" id="dlAudio">Download recording</button>
+      <button class="btn ghost" id="dlText">Download transcript</button>
+    </div>
+  </main>
+
+</div>
+
+<script>
+const IN_RATE = 16000, OUT_RATE = 24000;
+let ws, micCtx, micStream, micNode, playCtx, nextTime = 0, scheduled = [];
+let muted = false;
+
+// --- call recording -----------------------------------------------------------
+// Both sides are already passing through this page, so recording costs one push
+// per chunk. Everything is timestamped on playCtx's clock: agent chunks carry the
+// time they were SCHEDULED to play, which is when the caller actually hears them,
+// and mic chunks are stamped on arrival. Laying both onto that one timeline is
+// what makes the two tracks line up in the finished file.
+const REC_MAX_S = 20 * 60;          // hard cap; a runaway call must not eat memory
+let recCaller = [], recAgent = [], recTurns = [], recStarted = 0, recOverflow = false;
+
+function recReset() {
+  recCaller = []; recAgent = []; recTurns = [];
+  recStarted = Date.now(); recOverflow = false;
+}
+function recAt() { return playCtx ? playCtx.currentTime : 0; }
+function recRoom(at) {
+  if (at <= REC_MAX_S) return true;
+  recOverflow = true;
+  return false;
+}
+
+const $ = id => document.getElementById(id);
+
+function setMic(text, cls) {
+  $('micStatus').textContent = 'Microphone: ' + text;
+  $('micDot').className = 'dot' + (cls ? ' ' + cls : '');
+}
+function setLive(text, cls) {
+  $('liveText').textContent = text;
+  $('liveDot').className = 'dot' + (cls ? ' ' + cls : '');
+}
+function metric(id, text, cls) {
+  const el = $(id);
+  el.textContent = text;
+  el.className = 'value' + (cls ? ' ' + cls : '');
+}
+
+// Merge consecutive ConversationText events from the same speaker into one bubble.
+// 2500 was tuned against Flux, which emitted a whole reply within a couple of
+// seconds. Aura-2 synthesises in slower chunks and the API emits one
+// ConversationText per chunk, so the sentences of a SINGLE reply arrive 3-7s
+// apart (measured: 3.6s and 6.8s on one call) and every sentence became its own
+// "Agent" block. A caller turn still breaks the bubble on role change, and the
+// silence check-in fires at 15s, so 12s merges a reply without swallowing either.
+const TURN_MERGE_MS = 12000;
+let lastTurn = null;   // { role, bubble, at }
+
+// The Voice Agent API has no interim transcript — a caller's words only arrive
+// once the whole utterance is finalised, which on a long sentence is several
+// seconds of apparently dead screen. Show a listening placeholder the moment
+// speech is detected, and let the real text replace it. It never invents words;
+// it only says "you are being heard".
+let pending = null;
+
+function showListening() {
+  if (pending) return;
+  $('emptyState').hidden = true;
+  $('transcript').hidden = false;
+  const box = $('transcript');
+  const wrap = document.createElement('div');
+  wrap.className = 'turn user pending';
+  const label = document.createElement('div');
+  label.className = 'role';
+  label.textContent = 'You';
+  const bubble = document.createElement('div');
+  bubble.className = 'bubble';
+  bubble.innerHTML = '<span class="dots"><i></i><i></i><i></i></span>';
+  wrap.append(label, bubble);
+  box.appendChild(wrap);
+  box.scrollTop = box.scrollHeight;
+  pending = wrap;
+  lastTurn = null;   // the real line starts its own bubble
+}
+
+function clearListening() {
+  if (pending) { pending.remove(); pending = null; }
+}
+
+function addTurn(role, content) {
+  if (recStarted) recTurns.push({ ms: Date.now() - recStarted, role: role, text: content });
+  if (role === 'user') clearListening();
+  $('emptyState').hidden = true;
+  $('transcript').hidden = false;
+  const box = $('transcript');
+
+  const now = Date.now();
+  if (lastTurn && lastTurn.role === role && now - lastTurn.at < TURN_MERGE_MS) {
+    lastTurn.bubble.textContent += ' ' + content;
+    lastTurn.at = now;
+    box.scrollTop = box.scrollHeight;
+    return;
+  }
+
+  const wrap = document.createElement('div');
+  wrap.className = 'turn ' + (role === 'user' ? 'user' : 'agent');
+  const label = document.createElement('div');
+  label.className = 'role';
+  label.textContent = role === 'user' ? 'You' : 'Agent';
+  const bubble = document.createElement('div');
+  bubble.className = 'bubble';
+  bubble.textContent = content;
+  wrap.append(label, bubble);
+  lastTurn = { role, bubble, at: now };
+  box.appendChild(wrap);
+  box.scrollTop = box.scrollHeight;
+}
+
+/* --- audio ---------------------------------------------------------------- */
+
+function downsampleTo16k(f32, srcRate) {
+  const ratio = srcRate / IN_RATE, n = Math.floor(f32.length / ratio), out = new Int16Array(n);
+  for (let i = 0; i < n; i++) {
+    const v = f32[Math.floor(i * ratio)];
+    out[i] = Math.max(-1, Math.min(1, v)) * 0x7fff;
+  }
+  return out;
+}
+
+function playChunk(buf) {
+  const i16 = new Int16Array(buf), f32 = new Float32Array(i16.length);
+  for (let i = 0; i < i16.length; i++) f32[i] = i16[i] / 0x8000;
+  const ab = playCtx.createBuffer(1, f32.length, OUT_RATE);
+  ab.getChannelData(0).set(f32);
+  const src = playCtx.createBufferSource();
+  src.buffer = ab; src.connect(playCtx.destination);
+  const t = Math.max(playCtx.currentTime + 0.02, nextTime);
+  src.start(t); nextTime = t + ab.duration;
+  if (recRoom(t)) recAgent.push({ at: t, pcm: i16, dur: ab.duration });
+  scheduled.push(src);
+  src.onended = () => { const i = scheduled.indexOf(src); if (i >= 0) scheduled.splice(i, 1); };
+}
+
+function bargeIn() {
+  scheduled.forEach(s => { try { s.stop(); } catch (e) {} });
+  scheduled = []; nextTime = 0;
+  // The recording has to be cut exactly where playback was. Audio already sent
+  // but not yet heard is audio the caller never heard, and leaving it in would
+  // make the file show the agent talking over someone it actually stopped for.
+  const cut = recAt();
+  for (let i = recAgent.length - 1; i >= 0; i--) {
+    const c = recAgent[i];
+    if (c.at >= cut) { recAgent.splice(i, 1); continue; }
+    if (c.at + c.dur > cut) {
+      const keep = Math.max(0, Math.round((cut - c.at) * OUT_RATE));
+      c.pcm = c.pcm.subarray(0, keep); c.dur = keep / OUT_RATE;
+    }
+  }
+}
+
+/* --- saving the call ------------------------------------------------------- */
+
+// One shared timeline, two channels: caller left, agent right. Keeping them
+// separate rather than mixing to mono is the whole point -- on review you can
+// hear exactly who spoke when, including any overlap.
+function layDown(track, srcRate, totalSamples) {
+  const out = new Int16Array(totalSamples);
+  const ratio = srcRate / OUT_RATE;                 // 1 for the agent, 2/3 for the mic
+  for (const c of track) {
+    const start = Math.round(c.at * OUT_RATE);
+    const n = ratio === 1 ? c.pcm.length : Math.floor(c.pcm.length / ratio);
+    for (let i = 0; i < n; i++) {
+      const j = start + i;
+      if (j >= 0 && j < totalSamples) out[j] = ratio === 1 ? c.pcm[i] : c.pcm[Math.floor(i * ratio)];
+    }
+  }
+  return out;
+}
+
+function encodeWav(left, right) {
+  const n = Math.max(left.length, right.length), bytes = n * 4;
+  const buf = new ArrayBuffer(44 + bytes), v = new DataView(buf);
+  const tag = (o, str) => { for (let i = 0; i < str.length; i++) v.setUint8(o + i, str.charCodeAt(i)); };
+  tag(0, 'RIFF');  v.setUint32(4, 36 + bytes, true);  tag(8, 'WAVE');
+  tag(12, 'fmt '); v.setUint32(16, 16, true);         v.setUint16(20, 1, true);
+  v.setUint16(22, 2, true);                            // stereo
+  v.setUint32(24, OUT_RATE, true);
+  v.setUint32(28, OUT_RATE * 4, true);
+  v.setUint16(32, 4, true); v.setUint16(34, 16, true);
+  tag(36, 'data'); v.setUint32(40, bytes, true);
+  let o = 44;
+  for (let i = 0; i < n; i++) {
+    v.setInt16(o, left[i] || 0, true);
+    v.setInt16(o + 2, right[i] || 0, true);
+    o += 4;
+  }
+  return new Blob([buf], { type: 'audio/wav' });
+}
+
+// Audio extent: where the last sample sits. Used to size the WAV.
+function callEnd() {
+  let end = 0;
+  for (const c of recCaller.concat(recAgent)) end = Math.max(end, c.at + c.dur);
+  return end;
+}
+
+// Wall duration: how long the call actually lasted. NOT the same number --
+// callEnd() stops at the last sample, so a call that ends after a pause reports
+// a duration shorter than its own final line. The transcript stamps turns on the
+// wall clock, so its header has to agree with them.
+function wallSeconds() {
+  return recStarted ? (Date.now() - recStarted) / 1000 : 0;
+}
+
+function stamp() {
+  const d = new Date(recStarted || Date.now()), p = n => String(n).padStart(2, '0');
+  return d.getFullYear() + p(d.getMonth() + 1) + p(d.getDate()) + '-' + p(d.getHours()) + p(d.getMinutes()) + p(d.getSeconds());
+}
+
+function saveBlob(blob, filename) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 60000);
+}
+
+function downloadAudio() {
+  const total = Math.ceil(callEnd() * OUT_RATE);
+  if (!total) { $('afterCallNote').textContent = 'Nothing was recorded on that call.'; return; }
+  saveBlob(encodeWav(layDown(recCaller, IN_RATE, total), layDown(recAgent, OUT_RATE, total)),
+           'pharmacy-call-' + stamp() + '.wav');
+}
+
+function downloadTranscript() {
+  if (!recTurns.length) { $('afterCallNote').textContent = 'No transcript to save.'; return; }
+  const mmss = ms => {
+    const t = Math.max(0, Math.round(ms / 1000));
+    return String(Math.floor(t / 60)).padStart(2, '0') + ':' + String(t % 60).padStart(2, '0');
+  };
+  const lines = [
+    'Amazon Pharmacy voice agent - call transcript',
+    'Started   ' + new Date(recStarted).toLocaleString(),
+    'Duration  ' + mmss(wallSeconds() * 1000),
+    'Stack     ' + ($('stackNote').textContent || '').replace(/\n/g, ' | '),
+    ''
+  ];
+  for (const t of recTurns) lines.push(mmss(t.ms) + '  ' + (t.role === 'user' ? 'Caller' : 'Agent ') + '  ' + t.text);
+  if (recOverflow) lines.push('', '[recording capped at ' + (REC_MAX_S / 60) + ' minutes]');
+  saveBlob(new Blob([lines.join('\n')], { type: 'text/plain' }), 'pharmacy-call-' + stamp() + '.txt');
+}
+
+/* --- session -------------------------------------------------------------- */
+
+async function start() {
+  $('startBtn').disabled = true;
+  setLive('Connecting', 'warn');
+  playCtx = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: OUT_RATE });
+  ws = new WebSocket((location.protocol === 'https:' ? 'wss://' : 'ws://') + location.host + '/ws-browser');
+  ws.binaryType = 'arraybuffer';
+
+  ws.onmessage = async (ev) => {
+    if (ev.data instanceof ArrayBuffer) { playChunk(ev.data); return; }
+    const m = JSON.parse(ev.data);
+    if (m.type === 'ready') {
+      try {
+        await startMic();
+      } catch (e) {
+        setMic('Could not access audio devices', 'err');
+        setLive('Mic blocked', 'err');
+        metric('mStatus', 'Mic blocked', 'bad');
+        return;
+      }
+      $('composer').hidden = false;
+      $('afterCall').hidden = true;
+      recReset();
+      $('emptyState').hidden = true;
+      $('transcript').hidden = false;
+      lastTurn = null;
+      resetMuteUI();
+      setMic('Active', 'on');
+      setLive('Live', 'live');
+      metric('mStatus', 'Verifying', 'warn');
+    }
+    else if (m.type === 'ended') {
+      const why = m.reason === 'emergency' ? 'Call ended: emergency'
+        : m.reason === 'verification_failed' ? 'Call ended: verification failed'
+        : 'Call ended';
+      setLive(why, 'warn');
+      metric('mStatus', why.replace('Call ended: ', ''), 'bad');
+    }
+    else if (m.type === 'transcript') addTurn(m.role, m.content);
+    else if (m.type === 'clear') bargeIn();
+    else if (m.type === 'listening') showListening();
+    else if (m.type === 'tools') {
+      if (m.otp) metric('mOtp', m.otp, 'good');
+      if (m.verified) metric('mStatus', 'Verified', 'good');
+      else if (m.attempts_remaining != null && m.otp) {
+        metric('mStatus',
+          m.attempts_remaining > 0 ? m.attempts_remaining + ' left' : 'Locked out',
+          m.attempts_remaining > 0 ? 'warn' : 'bad');
+      }
+    }
+    // 'latency' frames still arrive and are still recorded server-side; the panel
+    // simply no longer displays them.
+  };
+  ws.onclose = () => stop(true);
+  ws.onerror = () => { setLive('Connection error', 'err'); stop(true); };
+}
+
+// Mute by disabling the track rather than stopping the send: the agent then
+// hears digital silence, exactly like a quiet room. Cutting the byte stream
+// mid-call risks confusing Flux's end-of-turn detection instead.
+function setMuted(on) {
+  muted = on;
+  if (micStream) micStream.getAudioTracks().forEach(t => { t.enabled = !on; });
+  const b = $('muteBtn');
+  b.textContent = on ? 'Unmute mic' : 'Mute mic';
+  b.classList.toggle('muted', on);
+  b.setAttribute('aria-pressed', String(on));
+  setMic(on ? 'Muted' : 'Active', on ? 'warn' : 'on');
+  setLive(on ? 'Muted' : 'Live', on ? 'warn' : 'live');
+}
+
+function resetMuteUI() {
+  muted = false;
+  const b = $('muteBtn');
+  b.textContent = 'Mute mic';
+  b.classList.remove('muted');
+  b.setAttribute('aria-pressed', 'false');
+}
+
+async function startMic() {
+  micStream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } });
+  micCtx = new (window.AudioContext || window.webkitAudioContext)();
+  const srcRate = micCtx.sampleRate;
+  const source = micCtx.createMediaStreamSource(micStream);
+  micNode = micCtx.createScriptProcessor(4096, 1, 1);
+  micNode.onaudioprocess = (e) => {
+    if (muted) return;                       // muted records as silence, which is the truth
+    const pcm = downsampleTo16k(e.inputBuffer.getChannelData(0), srcRate);
+    const at = recAt();
+    if (recRoom(at)) recCaller.push({ at: at, pcm: pcm, dur: pcm.length / IN_RATE });
+    if (ws && ws.readyState === 1) ws.send(pcm.buffer);
+  };
+  source.connect(micNode); micNode.connect(micCtx.destination);
+}
+
+function stop(fromClose) {
+  if (micNode) { micNode.disconnect(); micNode = null; }
+  if (micStream) { micStream.getTracks().forEach(t => t.stop()); micStream = null; }
+  if (micCtx) { micCtx.close(); micCtx = null; }
+  if (ws && !fromClose) ws.close();
+  bargeIn();
+  $('startBtn').disabled = false;
+  $('composer').hidden = true;
+  resetMuteUI();
+  setMic('Not active');
+  setLive('Call ended');
+
+  // Offer the recording rather than downloading it unasked: two files land in
+  // the browser's download folder otherwise, on every call, whether wanted or not.
+  const audio = callEnd(), secs = wallSeconds();
+  if (audio > 0.5 || recTurns.length) {
+    const mins = Math.floor(secs / 60), rem = Math.round(secs % 60);
+    $('afterCallNote').textContent = 'Call ended \u00b7 ' + (mins ? mins + 'm ' : '') + rem + 's \u00b7 '
+      + recTurns.length + ' turns' + (recOverflow ? ' (capped)' : '');
+    $('dlAudio').disabled = !(audio > 0.5);
+    $('dlText').disabled = !recTurns.length;
+    $('afterCall').hidden = false;
+  }
+}
+
+// Both sidebar panels come from /capabilities. The catalog list used to be
+// hardcoded in this file and drifted to naming 8 medications when the catalog
+// held 247 -- it was telling callers the wrong thing about what to try.
+(async function loadCapabilities() {
+  try {
+    const c = await (await fetch('/capabilities')).json();
+    const m = c.medications;
+    $('medCount').textContent = '\u00b7 ' + m.total;
+    $('medNote').textContent = m.total + ' medications, ' + m.strengths +
+      ' strengths. Ask for anything \u2014 these are just the demo favourites.';
+    $('medFeatured').innerHTML = m.featured.map(n => '<li>' + n + '</li>').join('');
+    $('medOut').textContent = m.out_of_stock.length
+      ? m.out_of_stock.join(', ') + ' \u2014 use it to test the unavailable path'
+      : 'nothing is out of stock';
+
+    $('kbCount').textContent = '\u00b7 ' + c.knowledge.reduce((a, t) => a + t.count, 0);
+    $('kbTopics').innerHTML = c.knowledge.map(t =>
+      '<li><b>' + t.topic + '</b> \u2014 &ldquo;' + t.example + '&rdquo;</li>').join('');
+    $('kbAccount').textContent = c.account.prescriptions.join(', ') +
+      ' \u00b7 ' + c.account.orders + ' orders on file';
+
+    // Rendered from /capabilities (server/config.py), never typed here.
+    const s = c.stack;
+    $('stackNote').textContent =
+      'STT: ' + s.stt +
+      '\nLLM: ' + s.llm +
+      '\nTTS: ' + s.tts;
+  } catch (e) {
+    $('medNote').textContent = 'Could not load the catalog list.';
+    $('stackNote').textContent = 'Could not load the stack config.';
+  }
+})();
+
+$('dlAudio').onclick = downloadAudio;
+$('dlText').onclick = downloadTranscript;
+$('startBtn').onclick = start;
+$('stopBtn').onclick = () => stop(false);
+
+function sendDigits() {
+  const d = $('digits').value.replace(/\D/g, '');
+  if (d && ws && ws.readyState === 1) {
+    ws.send(JSON.stringify({ type: 'keypad', digits: d }));
+    $('digits').value = '';
+  }
+}
+$('muteBtn').onclick = () => setMuted(!muted);
+document.addEventListener('keydown', (e) => {
+  if (e.key.toLowerCase() !== 'm' || e.metaKey || e.ctrlKey || e.altKey) return;
+  const t = e.target;
+  if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable)) return;
+  if ($('composer').hidden) return;          // no live call
+  e.preventDefault();
+  setMuted(!muted);
+});
+
+$('sendDigits').onclick = sendDigits;
+$('digits').addEventListener('keydown', e => { if (e.key === 'Enter') sendDigits(); });
+</script>
+
+<script>
+// The inbound number is deployment config (TWILIO_FROM_NUMBER), served by
+// /capabilities -- never typed into this file. Unset means the phone path is
+// not wired up, so every call-in affordance stays hidden rather than printing
+// a number nobody can dial.
+(async function loadPhone() {
+  let phone = null;
+  try { phone = (await (await fetch('/capabilities')).json()).phone; } catch (e) {}
+  if (!phone) return;
+  document.querySelectorAll('[data-phone-link]').forEach(a => {
+    a.href = 'tel:' + phone.e164;
+    a.hidden = false;
+  });
+  document.querySelectorAll('[data-phone-text]').forEach(el => {
+    el.textContent = phone.display;
+  });
+  document.querySelectorAll('[data-phone-block]').forEach(el => {
+    el.hidden = false;
+  });
+})();
+</script>
+</body>
+</html>
